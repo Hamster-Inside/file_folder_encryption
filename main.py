@@ -1,7 +1,13 @@
 import argparse, getpass
+from time import time
 from argparse import ArgumentParser, Namespace
 from typing import Any
+from tqdm import tqdm
+from cryptography.fernet import InvalidToken
 from getpass4 import getpass
+from crypto import Encryption, Decryption, Append
+import pathlib
+
 
 class Password(argparse.Action):
     def __call__(self, parser: ArgumentParser, namespace: Namespace, values: Any, optional_string):
@@ -11,12 +17,39 @@ class Password(argparse.Action):
 
 
 def file_name(value: str):
-    if value.endswith('.txt'):
+    if value.endswith(('.txt', '.encrypted')):
         return value
     return argparse.ArgumentError()
 
-def main(args):
-    print(args)
+
+def main(args_from_user):
+    files_to_process = args_from_user.file
+    if args_from_user.verbose >= 3:
+        files_to_process = tqdm(args_from_user.file)
+    for file in files_to_process:
+        before = time()
+        path = pathlib.Path(file)
+        if args_from_user.mode == 'encrypt':
+            action = Encryption(path)
+        elif args_from_user.mode == 'decrypt':
+            action = Decryption(path)
+        elif args_from_user.mode == 'append':
+            text = input('Jaki tekst dopisać do pliku? ')
+            action = Append(path, text)
+        try:
+            if not action.execute(args_from_user.password):
+                continue
+        except InvalidToken:
+            print(f'Wrong password for: {file}')
+            continue
+        after = time()
+        if 0 < args_from_user.verbose <= 2:
+            print(f'File: {file}', end='')
+            if args_from_user.verbose > 1:
+                print(f' -> job done in {round((after - before), 2)} seconds', end='')
+            print()
+        elif args_from_user.verbose >= 3:
+            files_to_process.set_description(file)
 
 
 if __name__ == '__main__':
