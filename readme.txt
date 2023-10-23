@@ -1,0 +1,1 @@
+Small script for decrypting / encrypting files
