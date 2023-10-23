@@ -1,2 +1,7 @@
 cryptography
 getpass4
+pip
+caugetch
+pycparser
+pyperclip
+tqdm
