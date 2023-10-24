@@ -1,4 +1,5 @@
 import argparse, getpass
+from os import walk
 from time import time
 from argparse import ArgumentParser, Namespace
 from typing import Any
@@ -7,7 +8,6 @@ from cryptography.fernet import InvalidToken
 from getpass4 import getpass
 from crypto import Encryption, Decryption, Append
 import pathlib
-
 
 class Password(argparse.Action):
     def __call__(self, parser: ArgumentParser, namespace: Namespace, values: Any, optional_string):
@@ -22,17 +22,30 @@ def file_name(value: str):
     return argparse.ArgumentError()
 
 
+
+
 def main(args_from_user):
-    files_to_process = args_from_user.file
+
+    if args_from_user.directory:
+        list_of_files = []
+        for path, directories, files in walk(args_from_user.directory):
+            for file in files:
+                list_of_files.append(f'{path}/{file}')
+        files_to_process = list_of_files
+    elif args_from_user.file:
+        files_to_process = args_from_user.file
     if args_from_user.verbose >= 3:
-        files_to_process = tqdm(args_from_user.file)
+        files_to_process = tqdm(files_to_process)
     for file in files_to_process:
         before = time()
         path = pathlib.Path(file)
         if args_from_user.mode == 'encrypt':
             action = Encryption(path)
         elif args_from_user.mode == 'decrypt':
-            action = Decryption(path)
+            if path.suffix == '.encrypted':
+                action = Decryption(path)
+            else:
+                print(f'Cannot decrypt file: {path} (it is not ".encrypted" file)')
         elif args_from_user.mode == 'append':
             text = input('Jaki tekst dopisać do pliku? ')
             action = Append(path, text)
