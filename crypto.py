@@ -41,7 +41,7 @@ class Decryption(Crypto):
 
         decrypted_content = fernet.decrypt(data_to_decrypt.encode('utf-8'))
 
-        with open(self.path.rename(self.path.with_suffix('.txt')), 'w') as file:
+        with open(self.path.rename(self.path.with_suffix('')), 'w') as file:
             file.write(decrypted_content.decode('utf-8'))
         return True
 
@@ -58,7 +58,7 @@ class Encryption(Crypto):
         fernet = Fernet(self.create_key(password))
         encrypted_content = fernet.encrypt(data_to_encrypt.encode('utf-8'))
 
-        with open(self.path.rename(self.path.with_suffix('.encrypted')), 'w') as file:
+        with open(self.path.rename(self.path.with_suffix(self.path.suffix + '.encrypted')), 'w') as file:
             file.write(encrypted_content.decode('utf-8'))
         return True
 
